@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>PW8-Using Google APIs </title>
+    <style>
+      #map {
+        height: 100%;
+      }
+
+      html, body {
+        height: 100%;
+    margin: 0;
+    padding: 0;
+      }
+	  #form-division {
+        position: absolute;
+        top: 60px;
+        left: 37%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+    </style>
+    <script>
+      var map;
+
+      function initMap() {
+        // Create the map.
+
+        var pyrmont = new google.maps.LatLng(-33.8665433,151.1956316);
+
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: pyrmont,
+            zoom: 15
+        });
+
+        var geocoder = new google.maps.Geocoder();
+
+        document.getElementById('submit').addEventListener('click', function() {
+          geocodeGenerator(geocoder, map);
+        });
+		}
+		
+	  function geocodeGenerator(geocoder, finalmap) {
+        var address = document.getElementById('addr').value;
+        geocoder.geocode({'address': address}, function(results, status) {
+          if (status === 'OK') {
+
+            var your_place=results[0].geometry.location;
+            finalmap.setCenter(your_place);
+            var marker = new google.maps.Marker({
+                map: map,
+                position: your_place
+            });
+	
+			service = new google.maps.places.PlacesService(finalmap);
+
+      service.nearbySearch(
+      {location: your_place, radius: 1500, type: ['restaurant']},
+      function(results, status) {
+              if (status !== 'OK') return;
+              createMarkers(results);
+            });
+          } else {
+            alert('Unsuccessful : ' + status);
+          }
+        });
+      }
+
+      function createMarkers(places) {
+        var bounds = new google.maps.LatLngBounds();
+        var placesList = document.getElementById('places');
+
+        for (var i = 0, place; place = places[i]; i++) {
+          var image = {
+            url: place.icon,
+            size: new google.maps.Size(71, 71),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(17, 34),
+            scaledSize: new google.maps.Size(25, 25)
+          };
+
+          var marker = new google.maps.Marker({
+            map: map,
+            icon: image,
+            title: place.name,
+            position: place.geometry.location
+          });
+
+          bounds.extend(place.geometry.location);
+        }
+        map.fitBounds(bounds);
+      }
+    </script>
+  </head>
+  <body>
+	<div id="form-division">
+      <label>Please enter address: </label><input id="addr" type="textbox" value="Sydney,Australia">
+      <input id="submit" type="button" value="Search for restaurants within 1500mts">
+    </div>
+    <div id="map"></div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBi_JTzVqM5i25N6YLkEnn81lCxKj2BtdQ&libraries=places&callback=initMap" async defer></script>
+  </body>
+</html>
